@@ -53,8 +53,7 @@ unsigned long x_code_flags(unsigned char* addr)
 	return code_flags(opcode) | (opcode & OP_EXTENDED);
 }
 
-unsigned long size_of_code(unsigned char* code, unsigned char** opcd)
-{
+unsigned long size_of_code(unsigned char* code, unsigned char** opcd) {
 	unsigned char i_mod, i_rm, i_reg;
 	unsigned long op1, op2, flags;
 	unsigned long pfx66, pfx67;
@@ -63,8 +62,7 @@ unsigned long size_of_code(unsigned char* code, unsigned char** opcd)
 	pfx66 = pfx67 = osize = oflen = 0;
 
 	/* skip preffixes */
-	while (code_flags(*code) & OP_PREFIX)
-	{
+	while (code_flags(*code) & OP_PREFIX) {
 		if (*code == 0x66) pfx66 = 1;
 		if (*code == 0x67) pfx67 = 1;
 		code++; osize++;
@@ -73,27 +71,22 @@ unsigned long size_of_code(unsigned char* code, unsigned char** opcd)
 	/* get opcode size and flags */
 	*opcd = code; op1 = *code++; osize++;
 
-	if (op1 == 0x0F)
-	{
+	if (op1 == 0x0F) {
 		op2 = (*code | OP_EXTENDED);
 		code++; osize++;
 	}
-	else
-	{
+	else {
 		op2 = op1;
 
 		/* pfx66 = pfx67 for opcodes A0 - A3 */
 		if (op2 >= 0xA0 && op2 <= 0xA3)
-		{
 			pfx66 = pfx67;
-		}
 	}
 
 	flags = code_flags(op2);
 
 	/* process MODRM byte */
-	if (flags & OP_MODRM)
-	{
+	if (flags & OP_MODRM) {
 		i_mod = (*code >> 6);
 		i_reg = (*code & 0x38) >> 3;
 		i_rm = (*code & 7);
@@ -101,47 +94,33 @@ unsigned long size_of_code(unsigned char* code, unsigned char** opcd)
 
 		/* in F6 and F7 opcodes, immediate value present if i_reg == 0 */
 		if (op1 == 0xF6 && i_reg == 0)
-		{
 			flags |= OP_DATA_I8;
-		}
+		
 		if (op1 == 0xF7 && i_reg == 0)
-		{
 			flags |= OP_DATA_PRE66_67;
-		}
 
-		switch (i_mod)
-		{
-		case 0:
-		{
+		switch (i_mod) {
+		case 0: {
 			if (pfx67)
-			{
 				if (i_rm == 6) oflen = 2;
-			}
 			else
-			{
 				if (i_rm == 5) oflen = 4;
-			}
 		}
 		break;
-		case 1:
-		{
+		case 1: {
 			oflen = 1;
 		}
 		break;
-		case 2:
-		{
+		case 2: {
 			if (pfx67) oflen = 2; else oflen = 4;
 		}
 		break;
 		}
 
 		/* process SIB byte */
-		if (pfx67 == 0 && i_rm == 4 && i_mod != 3)
-		{
+		if (pfx67 == 0 && i_rm == 4 && i_mod != 3) {
 			if ((*code & 7) == 5 && (i_mod != 1))
-			{
 				oflen = 4;
-			}
 
 			oflen++;
 		}
@@ -151,9 +130,8 @@ unsigned long size_of_code(unsigned char* code, unsigned char** opcd)
 
 	/* process offset */
 	if (flags & OP_DATA_PRE66_67)
-	{
 		osize += 4 - (pfx66 << 1);
-	}
+
 	/* process immediate value */
 	osize += (flags & 7);
 
