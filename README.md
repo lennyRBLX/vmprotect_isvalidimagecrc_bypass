@@ -5,4 +5,4 @@ Duplicates the process image to a R/W section of memory and writes a custom tram
 
 Tested Versions:
 - 3.4
-- 3.1
+- 3.1.2
