@@ -6,6 +6,13 @@
 *.lo
 *.o
 *.obj
+*.iobj
+*.ipdb
+*.pdb
+
+# Log Files
+*.log
+*.tlog
 
 # Precompiled Headers
 *.gch
@@ -30,3 +37,9 @@
 *.exe
 *.out
 *.app
+
+# Visual Studio
+.vs
+
+# Compiled
+x64

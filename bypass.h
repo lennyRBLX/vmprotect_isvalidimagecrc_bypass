@@ -16,8 +16,6 @@ namespace bypass {
 
 		fake_image = reinterpret_cast<uint64_t>(VirtualAlloc(NULL, nt->OptionalHeader.SizeOfImage, MEM_COMMIT, PAGE_READWRITE));
 		memory::write(fake_image, reinterpret_cast<void*>(base), static_cast<size_t>(nt->OptionalHeader.SizeOfImage));
-
-        std::cout << "fake_image: " << std::hex << fake_image << std::dec << std::endl;
 	}
 
     // finds a section of memory unused by process | should probably be in memory namespace
@@ -73,8 +71,6 @@ namespace bypass {
         // setup shellcode
         uint64_t fake_image_offset = fake_image - image_offset;
 
-        std::cout << std::hex << "fake_image: " << fake_image << "; fake_image_offset: " << fake_image_offset << std::dec << std::endl;
-
         // movabs r9, fake_image
         memcpy(
             reinterpret_cast<void*>(reinterpret_cast<uint64_t>(shellcode) + 2),
@@ -106,28 +102,22 @@ namespace bypass {
         // write in jmp back
         hooks::create_jmp(reinterpret_cast<void*>(result + location), reinterpret_cast<void*>(address + assembly_length));
 
-        return std::pair(result, assembly_length);
+        return std::pair<uint64_t, size_t>(result, assembly_length);
 	}
 
 	// xor al, [rdx] -> trampoline
 	void hook_crc(uint64_t address) {
 		create_fake_image();
 
-        std::cout << "created fake image" << std::endl;
-
         address += base;
 
         byte* final_opcode = NULL;
         size_t bytes_to_skip = size_of_code(reinterpret_cast<unsigned char*>(address), &final_opcode);
 
-        std::cout << "bytes_to_skip: " << bytes_to_skip << std::endl;
-
         // creates trampoline
         std::pair<uint64_t, size_t> shell_pair = build_shellcode(address + bytes_to_skip);
         uint64_t shellcode = shell_pair.first;
         size_t assembly_length = shell_pair.second;
-
-        std::printf("shellcode: %p; assembly_length: %i\n", shellcode, assembly_length);
 
         /* vmprotect_byte_search -> trampoline */
 
